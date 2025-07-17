@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.28...3.30)
 
 option(ENABLE_PLUGINS "Enable building OBS plugins" ON)
+option(USE_OPENH264 "Use OpenH264 instead of x264 if available" OFF)
 
 if(NOT ENABLE_PLUGINS)
   set_property(GLOBAL APPEND PROPERTY OBS_FEATURES_DISABLED "Plugin Support")
@@ -79,7 +80,18 @@ add_obs_plugin(obs-webrtc)
 
 check_obs_websocket()
 
-add_obs_plugin(obs-x264)
+if(USE_OPENH264)
+  find_package(OpenH264 REQUIRED)
+  add_obs_plugin(obs-openh264)
+else()
+  find_package(Libx264)
+  if(Libx264_FOUND)
+    add_obs_plugin(obs-x264)
+  else()
+    find_package(OpenH264 REQUIRED)
+    add_obs_plugin(obs-openh264)
+  endif()
+endif()
 add_obs_plugin(oss-audio PLATFORMS FREEBSD OPENBSD)
 add_obs_plugin(rtmp-services)
 add_obs_plugin(sndio PLATFORMS LINUX FREEBSD OPENBSD)
